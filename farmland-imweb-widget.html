@@ -1,0 +1,479 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+.farmland-widget {
+  --bg: #FAFAF9;
+  --surface: #FFFFFF;
+  --surface-hover: #F5F5F4;
+  --border: rgba(0,0,0,0.08);
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --accent: #2563eb;
+  --accent-secondary: #7c3aed;
+  --positive: #059669;
+  --negative: #e11d48;
+  --warning: #d97706;
+  --rice-color: #2563eb;
+  --field-color: #d97706;
+  --total-color: #7c3aed;
+  --grid-color: rgba(0,0,0,0.06);
+  --area-fill: rgba(124, 58, 237, 0.1);
+
+  font-family: 'Noto Sans KR', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px !important;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+.farmland-widget *, .farmland-widget *::before, .farmland-widget *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.farmland-widget h1,
+.farmland-widget h2,
+.farmland-widget h3 {
+  color: var(--text);
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.farmland-widget h1 { font-weight: 700; font-size: clamp(32px, 5vw, 48px) !important; }
+.farmland-widget h2 { font-weight: 600; font-size: clamp(24px, 3vw, 30px) !important; }
+.farmland-widget h3 { font-weight: 500; font-size: 21px !important; }
+
+.farmland-widget p,
+.farmland-widget li,
+.farmland-widget td,
+.farmland-widget th,
+.farmland-widget span,
+.farmland-widget label {
+  color: var(--text);
+  font-weight: 400;
+}
+
+.farmland-widget .fl-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.farmland-widget .fl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  transition: box-shadow 0.2s ease;
+}
+
+.farmland-widget .fl-card:hover {
+  box-shadow: 0 0 0 1px var(--border), 0 8px 16px rgba(0,0,0,0.08);
+}
+
+/* Hero */
+.farmland-widget .fl-hero {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.farmland-widget .fl-hero h1 { margin-bottom: 12px; }
+
+.farmland-widget .fl-hero p {
+  font-size: 17px !important;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* KPI Grid */
+.farmland-widget .fl-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.farmland-widget .fl-kpi-card { text-align: center; padding: 24px 16px; }
+
+.farmland-widget .fl-kpi-label {
+  font-size: 14px !important;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.farmland-widget .fl-kpi-value {
+  font-size: 36px !important;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.farmland-widget .fl-kpi-sub {
+  font-size: 13px !important;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.farmland-widget .fl-kpi-value.fl-negative { color: var(--negative); }
+.farmland-widget .fl-kpi-value.fl-accent { color: var(--accent); }
+
+/* Chart sections */
+.farmland-widget .fl-chart-section { margin-bottom: 48px; }
+.farmland-widget .fl-chart-section h2 { margin-bottom: 8px; }
+
+.farmland-widget .fl-chart-desc {
+  color: var(--text-secondary);
+  font-size: 15px !important;
+  margin-bottom: 20px;
+}
+
+.farmland-widget .fl-chart-container {
+  height: 400px;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+/* Legend */
+.farmland-widget .fl-legend-row {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.farmland-widget .fl-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px !important;
+  color: var(--text-secondary);
+}
+
+.farmland-widget .fl-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Insight */
+.farmland-widget .fl-insight {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 48px;
+  border-left: 4px solid var(--negative);
+}
+
+.farmland-widget .fl-insight h3 { margin-bottom: 12px; font-size: 18px !important; }
+
+.farmland-widget .fl-insight p {
+  color: var(--text-secondary);
+  font-size: 15px !important;
+  line-height: 1.8;
+}
+
+.farmland-widget .fl-insight strong { color: var(--text); }
+
+/* Footer */
+.farmland-widget .fl-footer {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--text-secondary);
+  font-size: 13px !important;
+  border-top: 1px solid var(--border);
+}
+
+/* Animations */
+@keyframes flFadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.farmland-widget .fl-animate { animation: flFadeInUp 0.6s ease-out both; }
+.farmland-widget .fl-animate.fl-d1 { animation-delay: 0.1s; }
+.farmland-widget .fl-animate.fl-d2 { animation-delay: 0.2s; }
+.farmland-widget .fl-animate.fl-d3 { animation-delay: 0.3s; }
+.farmland-widget .fl-animate.fl-d4 { animation-delay: 0.4s; }
+
+.farmland-widget .fl-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.farmland-widget .fl-reveal.fl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .farmland-widget .fl-container { padding: 24px 12px; }
+  .farmland-widget .fl-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .farmland-widget .fl-chart-container { height: 300px; padding: 12px; }
+}
+
+@media (max-width: 375px) {
+  .farmland-widget .fl-kpi-grid { grid-template-columns: 1fr; }
+  .farmland-widget .fl-kpi-value { font-size: 28px !important; }
+}
+</style>
+
+<div class="farmland-widget">
+  <div class="fl-container">
+
+    <section class="fl-hero fl-animate">
+      <h1>한국 경지면적 추이</h1>
+      <p>1970년부터 2024년까지 54년간 경지면적 변화 현황</p>
+    </section>
+
+    <section class="fl-kpi-grid">
+      <div class="fl-card fl-kpi-card fl-animate fl-d1">
+        <div class="fl-kpi-label">1970년 경지면적</div>
+        <div class="fl-kpi-value fl-accent" data-fl-count="2298" data-fl-suffix="천ha">0</div>
+        <div class="fl-kpi-sub">역대 최대 면적</div>
+      </div>
+      <div class="fl-card fl-kpi-card fl-animate fl-d2">
+        <div class="fl-kpi-label">2024년 경지면적</div>
+        <div class="fl-kpi-value" data-fl-count="1505" data-fl-suffix="천ha">0</div>
+        <div class="fl-kpi-sub">현재 면적</div>
+      </div>
+      <div class="fl-card fl-kpi-card fl-animate fl-d3">
+        <div class="fl-kpi-label">54년간 감소량</div>
+        <div class="fl-kpi-value fl-negative" data-fl-count="793" data-fl-prefix="-" data-fl-suffix="천ha">0</div>
+        <div class="fl-kpi-sub">약 34.5% 감소</div>
+      </div>
+      <div class="fl-card fl-kpi-card fl-animate fl-d4">
+        <div class="fl-kpi-label">연평균 감소율</div>
+        <div class="fl-kpi-value fl-negative">-0.8%</div>
+        <div class="fl-kpi-sub">지속적 감소 추세</div>
+      </div>
+    </section>
+
+    <section class="fl-chart-section fl-reveal">
+      <h2>경지면적 장기 추이 (1970~2024)</h2>
+      <p class="fl-chart-desc">도시화와 산업화로 인해 경지면적은 반세기 동안 꾸준히 감소해왔습니다.</p>
+      <div class="fl-chart-container">
+        <canvas id="flTotalChart"></canvas>
+      </div>
+    </section>
+
+    <section class="fl-chart-section fl-reveal">
+      <h2>논 vs 밭 면적 비교 (2015~2024)</h2>
+      <p class="fl-chart-desc">논 면적의 감소가 밭 면적 감소보다 두드러지며, 논밭 비율이 점차 균등해지고 있습니다.</p>
+      <div class="fl-chart-container">
+        <canvas id="flStackedChart"></canvas>
+      </div>
+      <div class="fl-legend-row">
+        <div class="fl-legend-item"><div class="fl-legend-dot" style="background:#60a5fa;"></div>논</div>
+        <div class="fl-legend-item"><div class="fl-legend-dot" style="background:#f59e0b;"></div>밭</div>
+      </div>
+    </section>
+
+    <section class="fl-chart-section fl-reveal">
+      <h2>전년 대비 감소율 (2016~2024)</h2>
+      <p class="fl-chart-desc">매년 0.5%~2.1% 사이의 경지면적이 줄어들고 있습니다.</p>
+      <div class="fl-chart-container">
+        <canvas id="flChangeChart"></canvas>
+      </div>
+    </section>
+
+    <section class="fl-insight fl-reveal">
+      <h3>주요 시사점</h3>
+      <p>
+        한국의 경지면적은 1970년 <strong>2,298천ha</strong>에서 2024년 <strong>1,505천ha</strong>로 약 <strong>34.5%</strong> 감소했습니다.
+        도로 건설, 택지 개발, 산업단지 조성 등 농지 전용이 주요 원인이며,
+        특히 <strong>논 면적</strong>의 감소가 두드러져 2015년 908천ha에서 2024년 761천ha로 <strong>16.2%</strong> 줄었습니다.
+        이 추세는 식량 자급률과 농업 기반에 장기적 영향을 미칠 전망입니다.
+      </p>
+    </section>
+
+    <footer class="fl-footer">
+      <p>출처: 통계청 경지면적조사, e-나라지표 | 단위: 천ha</p>
+    </footer>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  var widget = document.querySelector('.farmland-widget');
+  if (!widget) return;
+
+  // Scroll Reveal
+  var reveals = widget.querySelectorAll('.fl-reveal');
+  var revealObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('fl-visible');
+        revealObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  reveals.forEach(function(el) { revealObs.observe(el); });
+
+  // Number Counter
+  function animateCounters() {
+    widget.querySelectorAll('[data-fl-count]').forEach(function(el) {
+      if (el.dataset.flCounted) return;
+      var target = parseFloat(el.dataset.flCount);
+      if (!target) return;
+      el.dataset.flCounted = '1';
+      var prefix = el.dataset.flPrefix || '';
+      var suffix = el.dataset.flSuffix || '';
+      var start = performance.now();
+      var duration = 1200;
+      (function tick(now) {
+        var p = Math.min((now - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = prefix + Math.round(target * eased).toLocaleString() + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      })(start);
+    });
+  }
+
+  var firstKpi = widget.querySelector('[data-fl-count]');
+  if (firstKpi) {
+    var cObs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) { animateCounters(); cObs.disconnect(); }
+      });
+    }, { threshold: 0.3 });
+    cObs.observe(firstKpi);
+  }
+
+  // Charts
+  function buildCharts() {
+    if (typeof Chart === 'undefined') {
+      setTimeout(buildCharts, 200);
+      return;
+    }
+
+    Chart.defaults.animation = false;
+
+    var textSec = '#64748b';
+    var gridCol = 'rgba(0,0,0,0.06)';
+    var totalCol = '#a78bfa';
+    var areaFill = 'rgba(167,139,250,0.15)';
+    var riceCol = '#60a5fa';
+    var fieldCol = '#f59e0b';
+
+    // Chart 1: Total area
+    var c1 = widget.querySelector('#flTotalChart');
+    if (c1) {
+      new Chart(c1, {
+        type: 'line',
+        data: {
+          labels: ['1970','1975','1980','1985','1990','1995','2000','2005','2010','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'],
+          datasets: [{
+            label: '경지면적 (천ha)',
+            data: [2298,2240,2196,2144,2109,1985,1889,1824,1715,1679,1644,1621,1596,1581,1565,1547,1528,1512,1505],
+            borderColor: totalCol,
+            backgroundColor: areaFill,
+            fill: true,
+            tension: 0.3,
+            borderWidth: 3,
+            pointRadius: 0,
+            pointHoverRadius: 7,
+            pointHoverBackgroundColor: totalCol,
+            pointHoverBorderColor: '#FFFFFF',
+            pointHoverBorderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: { enabled: true, mode: 'index', intersect: false, padding: 12, cornerRadius: 8,
+              callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' 천ha'; } }
+            },
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: textSec, font: { size: 13 }, maxRotation: 0, maxTicksLimit: 10 }, grid: { color: gridCol } },
+            y: { min: 1400, max: 2400, ticks: { color: textSec, font: { size: 13 }, callback: function(v) { return v.toLocaleString(); } }, grid: { color: gridCol } }
+          },
+          layout: { padding: { top: 8, right: 8, bottom: 8, left: 8 } }
+        }
+      });
+    }
+
+    // Chart 2: Stacked bar
+    var c2 = widget.querySelector('#flStackedChart');
+    if (c2) {
+      new Chart(c2, {
+        type: 'bar',
+        data: {
+          labels: ['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'],
+          datasets: [
+            { label: '논', data: [908,896,865,844,830,824,780,776,764,761], backgroundColor: riceCol, borderRadius: 2 },
+            { label: '밭', data: [771,748,756,751,751,741,766,753,748,744], backgroundColor: fieldCol, borderRadius: 2 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: { enabled: true, mode: 'index', intersect: false, padding: 12, cornerRadius: 8,
+              callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() + ' 천ha'; } }
+            },
+            legend: { display: false }
+          },
+          scales: {
+            x: { stacked: true, ticks: { color: textSec, font: { size: 13 } }, grid: { display: false } },
+            y: { stacked: true, ticks: { color: textSec, font: { size: 13 }, callback: function(v) { return v.toLocaleString(); } }, grid: { color: gridCol } }
+          },
+          layout: { padding: { top: 8, right: 8, bottom: 8, left: 8 } }
+        }
+      });
+    }
+
+    // Chart 3: Change rate
+    var c3 = widget.querySelector('#flChangeChart');
+    if (c3) {
+      var changeData = [-2.1,-1.4,-1.6,-0.9,-1.0,-1.2,-1.2,-1.1,-0.5];
+      new Chart(c3, {
+        type: 'bar',
+        data: {
+          labels: ['2016','2017','2018','2019','2020','2021','2022','2023','2024'],
+          datasets: [{
+            label: '전년 대비 증감률 (%)',
+            data: changeData,
+            backgroundColor: changeData.map(function(v) {
+              var opacity = Math.min(Math.abs(v) / 2.5, 1) * 0.7 + 0.3;
+              return 'rgba(225,29,72,' + opacity + ')';
+            }),
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: { enabled: true, padding: 12, cornerRadius: 8,
+              callbacks: { label: function(ctx) { return ctx.parsed.y + '%'; } }
+            },
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: textSec, font: { size: 13 } }, grid: { display: false } },
+            y: { max: 0, min: -2.5, ticks: { color: textSec, font: { size: 13 }, callback: function(v) { return v + '%'; } }, grid: { color: gridCol } }
+          },
+          layout: { padding: { top: 8, right: 8, bottom: 8, left: 8 } }
+        }
+      });
+    }
+  }
+
+  buildCharts();
+})();
+</script>
