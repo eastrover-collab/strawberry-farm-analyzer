@@ -210,6 +210,10 @@ input[type="range"]::-webkit-slider-thumb {
   width: 100%;
   max-height: 400px;
 }
+.chart-container.chart-tall {
+  max-height: none;
+  height: 1200px;
+}
 
 /* Two Column Layout */
 .two-col {
@@ -480,18 +484,18 @@ footer {
       <button class="method-btn" data-method="hydro">수경재배</button>
     </div>
     <div class="summary-grid" id="labor-summary"></div>
+    <div class="card">
+      <h3>작업별 노동시간 (1000평 기준)</h3>
+      <div class="chart-container chart-tall"><canvas id="laborBarChart"></canvas></div>
+    </div>
     <div class="two-col">
-      <div class="card">
-        <h3>작업별 노동시간 (1000평 기준)</h3>
-        <div class="chart-container" style="max-height:1800px;min-height:1200px"><canvas id="laborBarChart"></canvas></div>
-      </div>
       <div class="card">
         <h3>자가노동 vs 고용노동</h3>
         <div class="chart-container"><canvas id="laborPieChart"></canvas></div>
-        <div style="margin-top:16px">
-          <h3>상위 5개 작업</h3>
-          <table id="labor-top5"></table>
-        </div>
+      </div>
+      <div class="card">
+        <h3>상위 5개 작업</h3>
+        <table id="labor-top5"></table>
       </div>
     </div>
   </div>
