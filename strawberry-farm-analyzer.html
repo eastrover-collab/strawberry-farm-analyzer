@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>딸기 농장 경영분석 시뮬레이터</title>
+<style>
+:root {
+  --primary: #E74C3C;
+  --primary-light: #FADBD8;
+  --primary-dark: #C0392B;
+  --success: #27AE60;
+  --success-light: #D5F5E3;
+  --warning: #F39C12;
+  --info: #3498DB;
+  --bg: #FFF5F5;
+  --card-bg: #FFFFFF;
+  --text: #2C3E50;
+  --text-light: #7F8C8D;
+  --border: #E8E8E8;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+
+/* Header */
+header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 24px 0;
+  text-align: center;
+}
+header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+header p { opacity: 0.9; font-size: 0.95rem; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--card-bg);
+  padding: 8px;
+  border-radius: var(--radius);
+  margin: 16px auto;
+  max-width: 1200px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab-btn:hover { background: var(--primary-light); color: var(--primary); }
+.tab-btn.active { background: var(--primary); color: white; }
+
+/* Tab Content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.card h3 { font-size: 1.1rem; margin-bottom: 16px; color: var(--primary-dark); }
+
+/* Summary Cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.summary-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--primary);
+  text-align: center;
+}
+.summary-card.green { border-left-color: var(--success); }
+.summary-card.blue { border-left-color: var(--info); }
+.summary-card.orange { border-left-color: var(--warning); }
+.summary-card .label { font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; }
+.summary-card .value { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+.summary-card .sub { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+
+/* Method Toggle */
+.method-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.method-btn {
+  padding: 8px 20px;
+  border: 2px solid var(--primary);
+  background: white;
+  color: var(--primary);
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.method-btn.active { background: var(--primary); color: white; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border); }
+th { background: #F8F9FA; font-weight: 600; color: var(--text); position: sticky; top: 0; }
+td:first-child, th:first-child { text-align: left; }
+tr:hover { background: #FFF0F0; }
+tr.highlight { background: #FFF3CD; font-weight: 600; }
+
+/* Sliders */
+.slider-group { margin-bottom: 20px; }
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+.slider-label .name { font-weight: 600; }
+.slider-label .val { color: var(--primary); font-weight: 700; }
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #DDD;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.slider-input {
+  width: 120px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: right;
+  font-size: 0.85rem;
+}
+.slider-pct {
+  width: 60px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.slider-pct.up { color: var(--primary); }
+.slider-pct.down { color: var(--success); }
+
+/* Result Panel */
+.result-panel {
+  background: linear-gradient(135deg, #2C3E50, #34495E);
+  color: white;
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.result-panel h3 { color: white; margin-bottom: 16px; }
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.result-item .r-label { font-size: 0.8rem; opacity: 0.8; }
+.result-item .r-value { font-size: 1.3rem; font-weight: 700; }
+.result-item .r-change { font-size: 0.85rem; margin-top: 2px; }
+.r-change.positive { color: #E74C3C; }
+.r-change.negative { color: #2ECC71; }
+
+/* Chart Container */
+.chart-container {
+  position: relative;
+  width: 100%;
+  max-height: 400px;
+}
+
+/* Two Column Layout */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Scenario Cards */
+.scenario-list { display: flex; flex-direction: column; gap: 8px; }
+.scenario-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #F8F9FA;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.scenario-item .s-name { font-weight: 600; }
+.scenario-item .s-income { color: var(--success); font-weight: 700; }
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: #E74C3C; color: white; }
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+.btn-outline:hover { background: var(--primary); color: white; }
+.btn-sm { padding: 4px 10px; font-size: 0.8rem; }
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-light);
+  font-size: 0.8rem;
+  margin-top: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  header h1 { font-size: 1.3rem; }
+  .two-col { grid-template-columns: 1fr; }
+  .tabs { gap: 2px; padding: 4px; }
+  .tab-btn { padding: 8px 8px; font-size: 0.78rem; min-width: 70px; }
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+  .card { padding: 16px; }
+  table { font-size: 0.78rem; }
+  th, td { padding: 6px 8px; }
+}
+
+/* BEP marker */
+.bep-info {
+  display: inline-block;
+  background: var(--warning);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+/* Reset button */
+.reset-btn {
+  float: right;
+  background: none;
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+.reset-btn:hover { background: #f8f8f8; }
+
+/* Finance Tab */
+.fin-input-group {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.fin-input-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: right;
+}
+.fin-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: right;
+  width: 100%;
+  max-width: 100%;
+}
+.fin-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(231,76,60,0.15); }
+.loan-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #FAFAFA;
+  position: relative;
+}
+.loan-card h4 {
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  color: var(--primary-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.loan-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px 16px;
+}
+.loan-grid .fin-input-group {
+  grid-template-columns: 140px 1fr;
+}
+.loan-remove {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 2px 6px;
+}
+.loan-remove:hover { color: var(--primary); }
+.fin-divider {
+  border: none;
+  border-top: 2px dashed var(--border);
+  margin: 20px 0;
+}
+.cashflow-bar {
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.cashflow-bar div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  padding: 0 6px;
+  min-width: 0;
+}
+.fin-summary-table td, .fin-summary-table th { padding: 8px 12px; }
+.fin-summary-table tr.total-row { font-weight: 700; background: #F0F0F0; }
+.fin-summary-table tr.net-row { font-weight: 700; background: #D5F5E3; }
+.fin-summary-table tr.deficit-row { font-weight: 700; background: #FADBD8; }
+.yearly-table { max-height: 400px; overflow-y: auto; }
+.fin-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  width: 100%;
+  max-width: 100%;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>딸기 농장 경영분석 시뮬레이터</h1>
+    <p>1000평(3,306m&sup2;) 기준 &middot; 2024년 농축산물소득자료 기반</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">경영현황</button>
+    <button class="tab-btn" data-tab="cost-sim">비용 시뮬레이션</button>
+    <button class="tab-btn" data-tab="price-sim">단가 시뮬레이션</button>
+    <button class="tab-btn" data-tab="labor">노동시간</button>
+    <button class="tab-btn" data-tab="scale">규모별 비교</button>
+    <button class="tab-btn" data-tab="finance">금융/수지분석</button>
+    <button class="tab-btn" data-tab="scenario">시나리오</button>
+  </div>
+
+  <!-- TAB 1: Dashboard -->
+  <div id="dashboard" class="tab-content active">
+    <div class="method-toggle" id="dash-method">
+      <button class="method-btn active" data-method="soil">토경재배</button>
+      <button class="method-btn" data-method="hydro">수경재배</button>
+    </div>
+    <div class="summary-grid" id="dash-summary"></div>
+    <div class="two-col">
+      <div class="card">
+        <h3>비용 구조</h3>
+        <div class="chart-container"><canvas id="costDonutChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>수입 vs 비용 vs 소득</h3>
+        <div class="chart-container"><canvas id="incomeBarChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>상세 비용 항목 (1000평 기준)</h3>
+      <div style="overflow-x:auto"><table id="dash-table"></table></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Cost Simulation -->
+  <div id="cost-sim" class="tab-content">
+    <div class="method-toggle" id="costsim-method">
+      <button class="method-btn active" data-method="soil">토경재배</button>
+      <button class="method-btn" data-method="hydro">수경재배</button>
+    </div>
+    <div class="result-panel" id="cost-result"></div>
+    <div class="two-col">
+      <div class="card">
+        <h3>비용 항목 조정 <button class="reset-btn" id="cost-reset">초기화</button></h3>
+        <div id="cost-sliders"></div>
+      </div>
+      <div class="card">
+        <h3>변동 전후 비교</h3>
+        <div class="chart-container"><canvas id="costCompareChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Price Simulation -->
+  <div id="price-sim" class="tab-content">
+    <div class="method-toggle" id="pricesim-method">
+      <button class="method-btn active" data-method="soil">토경재배</button>
+      <button class="method-btn" data-method="hydro">수경재배</button>
+    </div>
+    <div class="result-panel" id="price-result"></div>
+    <div class="two-col">
+      <div class="card">
+        <h3>판매조건 조정 <button class="reset-btn" id="price-reset">초기화</button></h3>
+        <div id="price-sliders"></div>
+      </div>
+      <div class="card">
+        <h3>단가별 소득 변화</h3>
+        <div class="chart-container"><canvas id="priceLineChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Labor -->
+  <div id="labor" class="tab-content">
+    <div class="method-toggle" id="labor-method">
+      <button class="method-btn active" data-method="soil">토경재배</button>
+      <button class="method-btn" data-method="hydro">수경재배</button>
+    </div>
+    <div class="summary-grid" id="labor-summary"></div>
+    <div class="two-col">
+      <div class="card">
+        <h3>작업별 노동시간 (1000평 기준)</h3>
+        <div class="chart-container" style="max-height:600px"><canvas id="laborBarChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>자가노동 vs 고용노동</h3>
+        <div class="chart-container"><canvas id="laborPieChart"></canvas></div>
+        <div style="margin-top:16px">
+          <h3>상위 5개 작업</h3>
+          <table id="labor-top5"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: Scale Comparison -->
+  <div id="scale" class="tab-content">
+    <div class="method-toggle" id="scale-method">
+      <button class="method-btn active" data-method="soil">토경재배</button>
+      <button class="method-btn" data-method="hydro">수경재배</button>
+    </div>
+    <div class="card">
+      <h3>규모별 경영성과 비교 (10a 기준)</h3>
+      <p style="margin-bottom:12px;font-size:0.85rem;color:var(--text-light)">
+        1000평 = 약 0.33ha &rarr; <strong>0.2ha~0.4ha 구간</strong>에 해당합니다.
+      </p>
+      <div style="overflow-x:auto"><table id="scale-table"></table></div>
+    </div>
+    <div class="card">
+      <h3>규모별 소득 비교</h3>
+      <div class="chart-container"><canvas id="scaleBarChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TAB 7: Finance -->
+  <div id="finance" class="tab-content">
+    <div class="two-col">
+      <!-- LEFT: Inputs -->
+      <div>
+        <div class="card">
+          <h3>경영 기본 정보</h3>
+          <div class="fin-input-group">
+            <label>재배방식</label>
+            <select class="fin-select" id="fin-method">
+              <option value="soil">토경재배</option>
+              <option value="hydro">수경재배</option>
+            </select>
+          </div>
+          <div class="fin-input-group">
+            <label>농장 규모 (평)</label>
+            <input type="text" class="fin-input" id="fin-area" value="1,000">
+          </div>
+          <div class="fin-input-group">
+            <label>판매단가 (원/kg)</label>
+            <input type="text" class="fin-input" id="fin-price" value="">
+          </div>
+          <div class="fin-input-group">
+            <label>10a당 생산량 (kg)</label>
+            <input type="text" class="fin-input" id="fin-qty" value="">
+          </div>
+          <div class="fin-input-group">
+            <label>총 생산량 (kg)</label>
+            <input type="text" class="fin-input" id="fin-total-qty" value="" readonly style="background:#f0f0f0">
+          </div>
+          <div class="fin-input-group">
+            <label>연간 판매액 (원)</label>
+            <input type="text" class="fin-input" id="fin-revenue" value="" readonly style="background:#f0f0f0">
+          </div>
+          <div class="fin-input-group">
+            <label>경영비 (원)</label>
+            <input type="text" class="fin-input" id="fin-expense" value="" readonly style="background:#f0f0f0">
+          </div>
+          <div class="fin-input-group">
+            <label>순수익 (원)</label>
+            <input type="text" class="fin-input" id="fin-netincome" value="" readonly style="background:#E8F8F5;font-weight:700;color:#27AE60">
+          </div>
+          <hr class="fin-divider">
+          <h3>시설투자비</h3>
+          <div class="fin-input-group">
+            <label>시설 총투자비 (원)</label>
+            <input type="text" class="fin-input" id="fin-invest" value="150,000,000">
+          </div>
+          <div class="fin-input-group">
+            <label>내용연수 (년)</label>
+            <input type="text" class="fin-input" id="fin-useful-life" value="15">
+          </div>
+          <div class="fin-input-group">
+            <label>연간 감가상각비</label>
+            <input type="text" class="fin-input" id="fin-depr" value="" readonly style="background:#f0f0f0">
+          </div>
+          <hr class="fin-divider">
+          <h3>생활비</h3>
+          <div class="fin-input-group">
+            <label>월 생활비 (원)</label>
+            <input type="text" class="fin-input" id="fin-living-month" value="3,000,000">
+          </div>
+          <div class="fin-input-group">
+            <label>연간 생활비</label>
+            <input type="text" class="fin-input" id="fin-living-year" value="" readonly style="background:#f0f0f0">
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>융자 항목 <button class="btn btn-primary btn-sm" id="fin-add-loan" style="float:right">+ 융자 추가</button></h3>
+          <div id="fin-loans"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div>
+        <div class="result-panel" id="fin-result-panel"></div>
+        <div class="card">
+          <h3>연간 수지 구조</h3>
+          <div id="fin-cashflow-bar-wrap"></div>
+          <div style="overflow-x:auto">
+            <table class="fin-summary-table" id="fin-summary-table"></table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>융자 상환 스케줄 (연도별)</h3>
+          <div class="yearly-table" style="overflow-x:auto">
+            <table id="fin-schedule-table"></table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>연도별 가용소득 추이</h3>
+          <div class="chart-container"><canvas id="finChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: Scenario -->
+  <div id="scenario" class="tab-content">
+    <div class="card">
+      <h3>시나리오 저장</h3>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input type="text" id="scenario-name" placeholder="시나리오 이름" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem">
+        <button class="btn btn-primary" id="scenario-save">저장</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-light)">현재 비용 시뮬레이션 설정이 저장됩니다. (최대 5개)</p>
+    </div>
+    <div class="card">
+      <h3>저장된 시나리오</h3>
+      <div id="scenario-list" class="scenario-list"></div>
+    </div>
+    <div class="card" id="scenario-compare-card" style="display:none">
+      <h3>시나리오 비교</h3>
+      <div style="overflow-x:auto"><table id="scenario-table"></table></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    데이터 출처: 2024년 농축산물소득자료 (농촌진흥청) &middot; 기준: 년 1기작/10a &middot;
+    1000평 환산계수: &times;3.306<br>
+    자가노동비 단가: 23,258원/시간 (5인~29인 제조업 평균임금)
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const SCALE = 3.306;
+const fmt = n => new Intl.NumberFormat('ko-KR').format(Math.round(n));
+const fmtW = n => fmt(n) + '원';
+const pct = (a, b) => b === 0 ? 0 : ((a - b) / b * 100).toFixed(1);
+
+const DATA = {
+  soil: {
+    name: '토경재배',
+    quantity: 2893, unitPrice: 9094, totalIncome: 26307065,
+    costs: {
+      seeds: { name: '종자종묘비', value: 5255419 },
+      inorgFert: { name: '무기질비료비', value: 449112 },
+      orgFert: { name: '유기질비료비', value: 228301 },
+      pesticide: { name: '농약비', value: 480752 },
+      utility: { name: '수도광열비', value: 1168043 },
+      otherMat: { name: '기타재료비', value: 2718157 },
+      smallTool: { name: '소농구비', value: 5787 },
+      equipDepr: { name: '대농구상각비', value: 423187 },
+      facilDepr: { name: '영농시설상각비', value: 1800874 },
+      maint: { name: '수리유지비', value: 50719 },
+      otherExp: { name: '기타비용', value: 109509 },
+    },
+    intermediateSub: 12689860,
+    equipRental: 30860,
+    landRental: 337966,
+    outsourcing: 32941,
+    hiredLabor: 2529214,
+    totalExpense: 15620841,
+    familyLabor: 8775713,
+    income: 10686223,
+    incomeRate: 40.6,
+    laborHours: {
+      family: 377.3, hired: 201.8, total: 579.1,
+      tasks: [
+        { name: '종자 준비 및 소독', family: 0.2, hired: 0.1, total: 0.3 },
+        { name: '묘판포트 준비/설치', family: 1.1, hired: 0.4, total: 1.5 },
+        { name: '파종', family: 0.5, hired: 0.3, total: 0.9 },
+        { name: '묘판포트 관리', family: 2.4, hired: 0.3, total: 2.8 },
+        { name: '하우스 설치', family: 1.5, hired: 1.0, total: 2.5 },
+        { name: '하우스 관리', family: 10.2, hired: 0.9, total: 11.1 },
+        { name: '퇴비 및 밑거름', family: 3.5, hired: 0.1, total: 3.6 },
+        { name: '경운정지', family: 4.1, hired: 0.1, total: 4.1 },
+        { name: '비닐피복/흙덮기', family: 6.9, hired: 3.1, total: 9.9 },
+        { name: '아주심기', family: 12.9, hired: 14.9, total: 27.8 },
+        { name: '웃거름 주기', family: 3.9, hired: 0.8, total: 4.7 },
+        { name: '병충해 방제', family: 21.3, hired: 2.2, total: 23.5 },
+        { name: '김매기', family: 4.0, hired: 0.6, total: 4.6 },
+        { name: '유인', family: 1.5, hired: 1.8, total: 3.3 },
+        { name: '순지르기/눈따기', family: 54.8, hired: 41.3, total: 96.1 },
+        { name: '물관리', family: 8.2, hired: 0.6, total: 8.8 },
+        { name: '온도관리', family: 9.6, hired: 0.5, total: 10.1 },
+        { name: '수확', family: 125.5, hired: 99.8, total: 225.4 },
+        { name: '선별 및 포장', family: 84.0, hired: 30.0, total: 114.0 },
+        { name: '운반 및 저장', family: 14.8, hired: 0.9, total: 15.8 },
+        { name: '기타', family: 6.4, hired: 2.0, total: 8.4 },
+      ]
+    },
+    scaleData: {
+      cols: ['평균', '0.2ha 미만', '0.2~0.4ha', '0.4~0.6ha', '0.6ha 이상'],
+      highlightCol: 2,
+      rows: [
+        { name: '수량(kg)', vals: [2893, 2855, 2803, 3114, 2794] },
+        { name: '단가(원/kg)', vals: [9094, 10047, 9863, 8620, 8364] },
+        { name: '총수입', vals: [26307065, 28687205, 27648196, 26846520, 23371729] },
+        { name: '경영비', vals: [15620841, 17098724, 15902120, 15816326, 14416430] },
+        { name: '소득', vals: [10686223, 11588481, 11746076, 11030194, 8955299] },
+        { name: '소득률(%)', vals: [40.6, 40.4, 42.5, 41.1, 38.3] },
+      ]
+    }
+  },
+  hydro: {
+    name: '수경재배',
+    quantity: 3292, unitPrice: 10868, totalIncome: 35781730,
+    costs: {
+      seeds: { name: '종자종묘비', value: 5321095 },
+      inorgFert: { name: '무기질비료비', value: 1066555 },
+      orgFert: { name: '유기질비료비', value: 32051 },
+      pesticide: { name: '농약비', value: 648963 },
+      utility: { name: '수도광열비', value: 2388555 },
+      otherMat: { name: '기타재료비', value: 3027575 },
+      smallTool: { name: '소농구비', value: 13641 },
+      equipDepr: { name: '대농구상각비', value: 864644 },
+      facilDepr: { name: '영농시설상각비', value: 3925157 },
+      maint: { name: '수리유지비', value: 122026 },
+      otherExp: { name: '기타비용', value: 169830 },
+    },
+    intermediateSub: 17580092,
+    equipRental: 48782,
+    landRental: 255339,
+    outsourcing: 33265,
+    hiredLabor: 2865487,
+    totalExpense: 20782965,
+    familyLabor: 12098260,
+    income: 14998764,
+    incomeRate: 41.9,
+    laborHours: {
+      family: 520.2, hired: 235.0, total: 755.2,
+      tasks: [
+        { name: '종자 준비 및 소독', family: 1.1, hired: 0.0, total: 1.1 },
+        { name: '묘판포트 준비/설치', family: 0.6, hired: 0.0, total: 0.6 },
+        { name: '파종', family: 0.2, hired: 0.0, total: 0.2 },
+        { name: '한때심기(가식)', family: 0.3, hired: 0.0, total: 0.3 },
+        { name: '묘판포트 관리', family: 1.0, hired: 0.6, total: 1.7 },
+        { name: '하우스 설치', family: 1.0, hired: 1.1, total: 2.1 },
+        { name: '하우스 관리', family: 17.4, hired: 6.6, total: 24.0 },
+        { name: '퇴비 및 밑거름', family: 0.5, hired: 0.2, total: 0.6 },
+        { name: '경운정지', family: 0.6, hired: 0.0, total: 0.6 },
+        { name: '비닐피복/흙덮기', family: 4.4, hired: 1.4, total: 5.8 },
+        { name: '아주심기', family: 15.4, hired: 13.0, total: 28.4 },
+        { name: '웃거름 주기', family: 3.8, hired: 0.2, total: 4.0 },
+        { name: '병충해 방제', family: 19.9, hired: 2.4, total: 22.3 },
+        { name: '김매기', family: 0.7, hired: 0.0, total: 0.7 },
+        { name: '유인', family: 1.7, hired: 2.8, total: 4.4 },
+        { name: '순지르기/눈따기', family: 77.6, hired: 50.4, total: 128.0 },
+        { name: '물관리', family: 14.0, hired: 0.6, total: 14.6 },
+        { name: '온도관리', family: 14.0, hired: 0.4, total: 14.4 },
+        { name: '수확', family: 173.3, hired: 86.7, total: 260.0 },
+        { name: '선별 및 포장', family: 134.4, hired: 61.9, total: 196.3 },
+        { name: '운반 및 저장', family: 21.1, hired: 2.8, total: 24.0 },
+        { name: '기타', family: 17.3, hired: 3.8, total: 21.1 },
+      ]
+    },
+    scaleData: {
+      cols: ['평균', '0.2ha 미만', '0.2~0.4ha', '0.4~0.6ha', '0.6ha 이상'],
+      highlightCol: 2,
+      rows: [
+        { name: '수량(kg)', vals: [3292, 3626, 3317, 3114, 3049] },
+        { name: '단가(원/kg)', vals: [10868, 11807, 11016, 10061, 10112] },
+        { name: '총수입', vals: [35781730, 42811774, 36543891, 31329354, 30829472] },
+        { name: '경영비', vals: [20782965, 23017860, 20975273, 19151141, 19491172] },
+        { name: '소득', vals: [14998764, 19793915, 15568618, 12178213, 11338300] },
+        { name: '소득률(%)', vals: [41.9, 46.2, 42.6, 38.9, 36.8] },
+      ]
+    }
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentMethod = 'soil';
+const costMultipliers = { soil: {}, hydro: {} };
+const priceOverrides = { soil: { price: null, qty: null }, hydro: { price: null, qty: null } };
+
+function getBase() { return DATA[currentMethod]; }
+
+// ============================================================
+// SIMULATION
+// ============================================================
+function simulate(method, costMult, priceOvr) {
+  const d = DATA[method];
+  const qty = (priceOvr.qty ?? d.quantity) * SCALE;
+  const price = priceOvr.price ?? d.unitPrice;
+  const totalIncome = qty * price;
+
+  let costTotal = 0;
+  const adjustedCosts = {};
+  for (const [k, v] of Object.entries(d.costs)) {
+    const m = costMult[k] ?? 1;
+    const adj = v.value * SCALE * m;
+    adjustedCosts[k] = adj;
+    costTotal += adj;
+  }
+
+  const rental = (d.equipRental + d.landRental) * SCALE;
+  const outsourcing = d.outsourcing * SCALE;
+  const hiredMult = costMult.hiredLabor ?? 1;
+  const hiredLabor = d.hiredLabor * SCALE * hiredMult;
+  const totalExpense = costTotal + rental + outsourcing + hiredLabor;
+  const income = totalIncome - totalExpense;
+  const incomeRate = totalIncome > 0 ? (income / totalIncome * 100) : 0;
+  const bep = qty > 0 ? totalExpense / qty : 0;
+
+  return { totalIncome, adjustedCosts, costTotal, rental, outsourcing,
+    hiredLabor, totalExpense, income, incomeRate, bep, qty, price };
+}
+
+// ============================================================
+// CHARTS (stored references)
+// ============================================================
+const charts = {};
+const hasChart = typeof Chart !== 'undefined';
+
+function getChart(id) { return charts[id]; }
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ============================================================
+// TAB 1: DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const d = getBase();
+  const s = SCALE;
+
+  // Summary cards
+  document.getElementById('dash-summary').innerHTML = `
+    <div class="summary-card">
+      <div class="label">총수입</div>
+      <div class="value">${fmtW(d.totalIncome * s)}</div>
+      <div class="sub">${fmt(d.quantity * s)}kg &times; ${fmt(d.unitPrice)}원/kg</div>
+    </div>
+    <div class="summary-card orange">
+      <div class="label">경영비</div>
+      <div class="value">${fmtW(d.totalExpense * s)}</div>
+      <div class="sub">10a당 ${fmtW(d.totalExpense)}</div>
+    </div>
+    <div class="summary-card green">
+      <div class="label">소득</div>
+      <div class="value">${fmtW(d.income * s)}</div>
+      <div class="sub">소득률 ${d.incomeRate}%</div>
+    </div>
+    <div class="summary-card blue">
+      <div class="label">총 노동시간</div>
+      <div class="value">${fmt(d.laborHours.total * s)}시간</div>
+      <div class="sub">자가 ${fmt(d.laborHours.family * s)}h + 고용 ${fmt(d.laborHours.hired * s)}h</div>
+    </div>
+  `;
+
+  // Detail table
+  const rows = Object.values(d.costs).map(c =>
+    `<tr><td>${c.name}</td><td>${fmtW(c.value)}</td><td>${fmtW(c.value * s)}</td></tr>`
+  ).join('');
+  document.getElementById('dash-table').innerHTML = `
+    <thead><tr><th>비목</th><th>10a 기준</th><th>1000평 기준</th></tr></thead>
+    <tbody>
+      ${rows}
+      <tr style="font-weight:700;border-top:2px solid var(--text)">
+        <td>중간재비 소계</td><td>${fmtW(d.intermediateSub)}</td><td>${fmtW(d.intermediateSub * s)}</td>
+      </tr>
+      <tr><td>농기계시설 임차료</td><td>${fmtW(d.equipRental)}</td><td>${fmtW(d.equipRental * s)}</td></tr>
+      <tr><td>토지 임차료</td><td>${fmtW(d.landRental)}</td><td>${fmtW(d.landRental * s)}</td></tr>
+      <tr><td>위탁영농비</td><td>${fmtW(d.outsourcing)}</td><td>${fmtW(d.outsourcing * s)}</td></tr>
+      <tr><td>고용노동비</td><td>${fmtW(d.hiredLabor)}</td><td>${fmtW(d.hiredLabor * s)}</td></tr>
+      <tr style="font-weight:700;border-top:2px solid var(--text)">
+        <td>경영비 합계</td><td>${fmtW(d.totalExpense)}</td><td>${fmtW(d.totalExpense * s)}</td>
+      </tr>
+      <tr style="color:var(--text-light)"><td>자가노동비</td><td>${fmtW(d.familyLabor)}</td><td>${fmtW(d.familyLabor * s)}</td></tr>
+    </tbody>
+  `;
+
+  // Charts
+  if (!hasChart) return;
+
+  // Donut
+  const costEntries = Object.values(d.costs);
+  destroyChart('costDonut');
+  charts.costDonut = new Chart(document.getElementById('costDonutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: costEntries.map(c => c.name),
+      datasets: [{
+        data: costEntries.map(c => c.value * s),
+        backgroundColor: ['#E74C3C','#3498DB','#2ECC71','#F39C12','#9B59B6','#1ABC9C','#E67E22','#34495E','#E91E63','#00BCD4','#795548'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8 } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmtW(ctx.raw)} (${(ctx.raw / (d.intermediateSub*s)*100).toFixed(1)}%)` } }
+      }
+    }
+  });
+
+  // Income bar
+  destroyChart('incomeBar');
+  charts.incomeBar = new Chart(document.getElementById('incomeBarChart'), {
+    type: 'bar',
+    data: {
+      labels: ['총수입', '경영비', '소득'],
+      datasets: [{
+        data: [d.totalIncome * s, d.totalExpense * s, d.income * s],
+        backgroundColor: ['#3498DB', '#E74C3C', '#2ECC71'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => fmtW(ctx.raw) } }
+      },
+      scales: {
+        y: { ticks: { callback: v => (v/10000).toFixed(0) + '만원' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// TAB 2: COST SIMULATION
+// ============================================================
+const COST_SLIDER_KEYS = ['seeds','inorgFert','orgFert','pesticide','utility','otherMat','equipDepr','facilDepr','maint','hiredLabor'];
+
+function buildCostSliders() {
+  const d = getBase();
+  const mult = costMultipliers[currentMethod];
+  const container = document.getElementById('cost-sliders');
+  let html = '';
+
+  for (const key of COST_SLIDER_KEYS) {
+    let name, baseVal;
+    if (key === 'hiredLabor') {
+      name = '고용노동비'; baseVal = d.hiredLabor;
+    } else {
+      name = d.costs[key].name; baseVal = d.costs[key].value;
+    }
+    const m = mult[key] ?? 1;
+    const scaled = baseVal * SCALE * m;
+    const change = ((m - 1) * 100).toFixed(0);
+    const pctClass = m > 1 ? 'up' : m < 1 ? 'down' : '';
+
+    html += `
+      <div class="slider-group">
+        <div class="slider-label">
+          <span class="name">${name}</span>
+          <span class="val">${fmtW(scaled)}</span>
+        </div>
+        <div class="slider-row">
+          <input type="range" min="0" max="200" value="${m*100}" data-key="${key}" class="cost-slider">
+          <span class="slider-pct ${pctClass}">${change > 0 ? '+' : ''}${change}%</span>
+        </div>
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('.cost-slider').forEach(sl => {
+    sl.addEventListener('input', e => {
+      const key = e.target.dataset.key;
+      costMultipliers[currentMethod][key] = parseInt(e.target.value) / 100;
+      updateCostSim();
+    });
+  });
+}
+
+function updateCostSim() {
+  const d = getBase();
+  const mult = costMultipliers[currentMethod];
+  const base = simulate(currentMethod, {}, { price: null, qty: null });
+  const sim = simulate(currentMethod, mult, { price: null, qty: null });
+
+  // Update slider labels
+  const sliders = document.querySelectorAll('#cost-sliders .cost-slider');
+  sliders.forEach(sl => {
+    const key = sl.dataset.key;
+    const m = mult[key] ?? 1;
+    let baseVal;
+    if (key === 'hiredLabor') baseVal = d.hiredLabor;
+    else baseVal = d.costs[key].value;
+    const scaled = baseVal * SCALE * m;
+    const group = sl.closest('.slider-group');
+    group.querySelector('.val').textContent = fmtW(scaled);
+    const change = ((m - 1) * 100).toFixed(0);
+    const pctEl = group.querySelector('.slider-pct');
+    pctEl.textContent = `${change > 0 ? '+' : ''}${change}%`;
+    pctEl.className = 'slider-pct ' + (m > 1 ? 'up' : m < 1 ? 'down' : '');
+  });
+
+  // Result panel
+  const expChange = pct(sim.totalExpense, base.totalExpense);
+  const incChange = pct(sim.income, base.income);
+  document.getElementById('cost-result').innerHTML = `
+    <h3>시뮬레이션 결과</h3>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="r-label">총수입</div>
+        <div class="r-value">${fmtW(sim.totalIncome)}</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">경영비</div>
+        <div class="r-value">${fmtW(sim.totalExpense)}</div>
+        <div class="r-change ${expChange > 0 ? 'positive' : 'negative'}">${expChange > 0 ? '+' : ''}${expChange}% 변동</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">소득</div>
+        <div class="r-value">${fmtW(sim.income)}</div>
+        <div class="r-change ${incChange < 0 ? 'positive' : 'negative'}">${incChange > 0 ? '+' : ''}${incChange}% 변동</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">소득률</div>
+        <div class="r-value">${sim.incomeRate.toFixed(1)}%</div>
+      </div>
+    </div>
+  `;
+
+  // Compare chart
+  if (!hasChart) return;
+  destroyChart('costCompare');
+  const labels = COST_SLIDER_KEYS.map(k => k === 'hiredLabor' ? '고용노동비' : d.costs[k].name);
+  const baseVals = COST_SLIDER_KEYS.map(k => {
+    if (k === 'hiredLabor') return d.hiredLabor * SCALE;
+    return d.costs[k].value * SCALE;
+  });
+  const simVals = COST_SLIDER_KEYS.map(k => {
+    const m = mult[k] ?? 1;
+    if (k === 'hiredLabor') return d.hiredLabor * SCALE * m;
+    return d.costs[k].value * SCALE * m;
+  });
+
+  charts.costCompare = new Chart(document.getElementById('costCompareChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: '기준', data: baseVals, backgroundColor: '#BDC3C7', borderRadius: 4 },
+        { label: '조정 후', data: simVals, backgroundColor: '#E74C3C', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtW(ctx.raw) } }
+      },
+      scales: { x: { ticks: { callback: v => (v/10000).toFixed(0) + '만' } } }
+    }
+  });
+}
+
+// ============================================================
+// TAB 3: PRICE SIMULATION
+// ============================================================
+function buildPriceSliders() {
+  const d = getBase();
+  const ovr = priceOverrides[currentMethod];
+  const price = ovr.price ?? d.unitPrice;
+  const qty = ovr.qty ?? d.quantity;
+
+  document.getElementById('price-sliders').innerHTML = `
+    <div class="slider-group">
+      <div class="slider-label">
+        <span class="name">판매단가 (원/kg)</span>
+        <span class="val" id="price-val">${fmt(price)}원</span>
+      </div>
+      <div class="slider-row">
+        <input type="range" min="3000" max="18000" step="100" value="${price}" id="price-slider">
+      </div>
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        <span class="name">10a당 생산량 (kg)</span>
+        <span class="val" id="qty-val">${fmt(qty)}kg (1000평: ${fmt(qty * SCALE)}kg)</span>
+      </div>
+      <div class="slider-row">
+        <input type="range" min="1000" max="5000" step="50" value="${qty}" id="qty-slider">
+      </div>
+    </div>
+  `;
+
+  document.getElementById('price-slider').addEventListener('input', e => {
+    priceOverrides[currentMethod].price = parseInt(e.target.value);
+    updatePriceSim();
+  });
+  document.getElementById('qty-slider').addEventListener('input', e => {
+    priceOverrides[currentMethod].qty = parseInt(e.target.value);
+    updatePriceSim();
+  });
+}
+
+function updatePriceSim() {
+  const d = getBase();
+  const ovr = priceOverrides[currentMethod];
+  const price = ovr.price ?? d.unitPrice;
+  const qty = ovr.qty ?? d.quantity;
+  const sim = simulate(currentMethod, costMultipliers[currentMethod], { price, qty });
+  const base = simulate(currentMethod, costMultipliers[currentMethod], { price: null, qty: null });
+
+  document.getElementById('price-val').textContent = fmt(price) + '원';
+  document.getElementById('qty-val').textContent = `${fmt(qty)}kg (1000평: ${fmt(qty * SCALE)}kg)`;
+
+  const incChange = pct(sim.income, base.income);
+  document.getElementById('price-result').innerHTML = `
+    <h3>시뮬레이션 결과</h3>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="r-label">총수입</div>
+        <div class="r-value">${fmtW(sim.totalIncome)}</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">경영비</div>
+        <div class="r-value">${fmtW(sim.totalExpense)}</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">소득</div>
+        <div class="r-value">${fmtW(sim.income)}</div>
+        <div class="r-change ${incChange < 0 ? 'positive' : 'negative'}">${incChange > 0 ? '+' : ''}${incChange}%</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">소득률</div>
+        <div class="r-value">${sim.incomeRate.toFixed(1)}%</div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <span class="bep-info">손익분기 단가: ${fmt(Math.round(sim.bep))}원/kg</span>
+    </div>
+  `;
+
+  if (!hasChart) return;
+  destroyChart('priceLine');
+  const prices = [], incomes = [], zeros = [];
+  for (let p = 3000; p <= 18000; p += 500) {
+    const r = simulate(currentMethod, costMultipliers[currentMethod], { price: p, qty });
+    prices.push(p);
+    incomes.push(r.income);
+    zeros.push(0);
+  }
+
+  charts.priceLine = new Chart(document.getElementById('priceLineChart'), {
+    type: 'line',
+    data: {
+      labels: prices.map(p => fmt(p)),
+      datasets: [
+        {
+          label: '소득',
+          data: incomes,
+          borderColor: '#E74C3C',
+          backgroundColor: 'rgba(231,76,60,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2
+        },
+        {
+          label: '손익분기선',
+          data: zeros,
+          borderColor: '#999',
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtW(ctx.raw) } },
+        annotation: undefined
+      },
+      scales: {
+        x: { title: { display: true, text: '판매단가 (원/kg)' } },
+        y: { title: { display: true, text: '소득 (원)' }, ticks: { callback: v => (v/10000).toFixed(0) + '만' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// TAB 4: LABOR
+// ============================================================
+function renderLabor() {
+  const d = getBase();
+  const lh = d.laborHours;
+
+  document.getElementById('labor-summary').innerHTML = `
+    <div class="summary-card">
+      <div class="label">총 노동시간 (1000평)</div>
+      <div class="value">${fmt(lh.total * SCALE)}시간</div>
+      <div class="sub">10a당 ${lh.total}시간</div>
+    </div>
+    <div class="summary-card green">
+      <div class="label">자가노동</div>
+      <div class="value">${fmt(lh.family * SCALE)}시간</div>
+      <div class="sub">${(lh.family/lh.total*100).toFixed(1)}%</div>
+    </div>
+    <div class="summary-card orange">
+      <div class="label">고용노동</div>
+      <div class="value">${fmt(lh.hired * SCALE)}시간</div>
+      <div class="sub">${(lh.hired/lh.total*100).toFixed(1)}%</div>
+    </div>
+    <div class="summary-card blue">
+      <div class="label">자가노동 환산비용</div>
+      <div class="value">${fmtW(d.familyLabor * SCALE)}</div>
+      <div class="sub">시간당 23,258원 적용</div>
+    </div>
+  `;
+
+  // Top 5 table
+  const sorted = [...lh.tasks].sort((a, b) => b.total - a.total);
+  const top5 = sorted.slice(0, 5);
+  document.getElementById('labor-top5').innerHTML = `
+    <thead><tr><th>순위</th><th>작업</th><th>시간(10a)</th><th>시간(1000평)</th><th>비중</th></tr></thead>
+    <tbody>${top5.map((t, i) => `
+      <tr><td>${i+1}</td><td>${t.name}</td><td>${t.total}h</td><td>${fmt(t.total*SCALE)}h</td><td>${(t.total/lh.total*100).toFixed(1)}%</td></tr>
+    `).join('')}</tbody>
+  `;
+
+  if (!hasChart) return;
+
+  // Horizontal bar
+  destroyChart('laborBar');
+  const tasks = sorted;
+  charts.laborBar = new Chart(document.getElementById('laborBarChart'), {
+    type: 'bar',
+    data: {
+      labels: tasks.map(t => t.name),
+      datasets: [
+        { label: '자가노동', data: tasks.map(t => t.family * SCALE), backgroundColor: '#3498DB', borderRadius: 3 },
+        { label: '고용노동', data: tasks.map(t => t.hired * SCALE), backgroundColor: '#E74C3C', borderRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + '시간' } } },
+      scales: {
+        x: { stacked: true, title: { display: true, text: '시간 (1000평 기준)' } },
+        y: { stacked: true }
+      }
+    }
+  });
+
+  // Pie
+  destroyChart('laborPie');
+  charts.laborPie = new Chart(document.getElementById('laborPieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['자가노동', '고용노동'],
+      datasets: [{
+        data: [lh.family * SCALE, lh.hired * SCALE],
+        backgroundColor: ['#3498DB', '#E74C3C'],
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.raw.toFixed(1) + '시간' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// TAB 5: SCALE COMPARISON
+// ============================================================
+function renderScale() {
+  const sd = getBase().scaleData;
+  const hl = sd.highlightCol;
+
+  let thead = '<thead><tr><th>구분</th>' + sd.cols.map((c, i) =>
+    `<th${i === hl ? ' style="background:#FFF3CD"' : ''}>${c}</th>`
+  ).join('') + '</tr></thead>';
+
+  let tbody = '<tbody>' + sd.rows.map(r => {
+    const isRate = r.name.includes('%');
+    return '<tr>' + `<td>${r.name}</td>` + r.vals.map((v, i) =>
+      `<td${i === hl ? ' style="background:#FFF3CD;font-weight:600"' : ''}>${isRate ? v + '%' : fmt(v)}</td>`
+    ).join('') + '</tr>';
+  }).join('') + '</tbody>';
+
+  document.getElementById('scale-table').innerHTML = thead + tbody;
+
+  if (!hasChart) return;
+  destroyChart('scaleBar');
+  const incomeRow = sd.rows.find(r => r.name === '소득');
+  charts.scaleBar = new Chart(document.getElementById('scaleBarChart'), {
+    type: 'bar',
+    data: {
+      labels: sd.cols,
+      datasets: [{
+        label: '소득 (10a)',
+        data: incomeRow.vals,
+        backgroundColor: sd.cols.map((_, i) => i === hl ? '#E74C3C' : '#BDC3C7'),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => fmtW(ctx.raw) } }
+      },
+      scales: { y: { ticks: { callback: v => (v/10000).toFixed(0) + '만' } } }
+    }
+  });
+}
+
+// ============================================================
+// TAB 6: SCENARIOS
+// ============================================================
+function getScenarios() {
+  try { return JSON.parse(localStorage.getItem('strawberry_scenarios') || '[]'); }
+  catch { return []; }
+}
+function saveScenarios(list) { localStorage.setItem('strawberry_scenarios', JSON.stringify(list)); }
+
+function renderScenarios() {
+  const list = getScenarios();
+  const container = document.getElementById('scenario-list');
+
+  if (list.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-light);text-align:center;padding:20px">저장된 시나리오가 없습니다.</p>';
+    document.getElementById('scenario-compare-card').style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = list.map((sc, i) => `
+    <div class="scenario-item">
+      <div>
+        <div class="s-name">${sc.name}</div>
+        <div style="font-size:0.8rem;color:var(--text-light)">${sc.method === 'soil' ? '토경' : '수경'} &middot; ${sc.date}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="s-income">${fmtW(sc.income)}</span>
+        <button class="btn btn-outline btn-sm" onclick="loadScenario(${i})">불러오기</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteScenario(${i})">삭제</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Compare table
+  if (list.length >= 2) {
+    document.getElementById('scenario-compare-card').style.display = 'block';
+    let thead = '<thead><tr><th>항목</th>' + list.map(s => `<th>${s.name}</th>`).join('') + '</tr></thead>';
+    let tbody = '<tbody>';
+    tbody += '<tr><td>재배방식</td>' + list.map(s => `<td>${s.method === 'soil' ? '토경' : '수경'}</td>`).join('') + '</tr>';
+    tbody += '<tr><td>총수입</td>' + list.map(s => `<td>${fmtW(s.totalIncome)}</td>`).join('') + '</tr>';
+    tbody += '<tr><td>경영비</td>' + list.map(s => `<td>${fmtW(s.totalExpense)}</td>`).join('') + '</tr>';
+    tbody += '<tr style="font-weight:700"><td>소득</td>' + list.map(s => `<td>${fmtW(s.income)}</td>`).join('') + '</tr>';
+    tbody += '<tr><td>소득률</td>' + list.map(s => `<td>${s.incomeRate.toFixed(1)}%</td>`).join('') + '</tr>';
+    tbody += '</tbody>';
+    document.getElementById('scenario-table').innerHTML = thead + tbody;
+  } else {
+    document.getElementById('scenario-compare-card').style.display = 'none';
+  }
+}
+
+document.getElementById('scenario-save').addEventListener('click', () => {
+  const name = document.getElementById('scenario-name').value.trim();
+  if (!name) { alert('시나리오 이름을 입력해주세요.'); return; }
+
+  const list = getScenarios();
+  if (list.length >= 5) { alert('최대 5개까지 저장 가능합니다. 기존 시나리오를 삭제해주세요.'); return; }
+
+  const sim = simulate(currentMethod, costMultipliers[currentMethod], priceOverrides[currentMethod]);
+  list.push({
+    name,
+    method: currentMethod,
+    multipliers: { ...costMultipliers[currentMethod] },
+    priceOverrides: { ...priceOverrides[currentMethod] },
+    totalIncome: sim.totalIncome,
+    totalExpense: sim.totalExpense,
+    income: sim.income,
+    incomeRate: sim.incomeRate,
+    date: new Date().toLocaleDateString('ko-KR')
+  });
+  saveScenarios(list);
+  document.getElementById('scenario-name').value = '';
+  renderScenarios();
+});
+
+window.loadScenario = function(idx) {
+  const list = getScenarios();
+  const sc = list[idx];
+  currentMethod = sc.method;
+  costMultipliers[currentMethod] = { ...sc.multipliers };
+  priceOverrides[currentMethod] = { ...sc.priceOverrides };
+  updateAllMethodBtns();
+  switchTab('cost-sim');
+};
+
+window.deleteScenario = function(idx) {
+  const list = getScenarios();
+  list.splice(idx, 1);
+  saveScenarios(list);
+  renderScenarios();
+};
+
+// ============================================================
+// TAB 7: FINANCE
+// ============================================================
+let finLoans = [
+  { name: '시설자금 대출', amount: 100000000, rate: 2.0, totalYears: 10, graceYears: 2, method: 'equal_principal' }
+];
+
+function parseNum(str) {
+  if (typeof str === 'number') return str;
+  return parseInt(String(str).replace(/[^0-9-]/g, '')) || 0;
+}
+function toInputFmt(n) { return fmt(Math.round(n)); }
+
+function initFinanceDefaults() {
+  const m = document.getElementById('fin-method').value;
+  const d = DATA[m];
+  const area = parseNum(document.getElementById('fin-area').value);
+  const scale = area * SCALE / 1000; // 1000평 = SCALE(3.306) × 10a
+  if (!document.getElementById('fin-price').dataset.userSet) {
+    document.getElementById('fin-price').value = toInputFmt(d.unitPrice);
+  }
+}
+
+function calcFinance() {
+  const m = document.getElementById('fin-method').value;
+  const d = DATA[m];
+  const area = parseNum(document.getElementById('fin-area').value);
+  const scale = area * SCALE / 1000;
+  const price = parseNum(document.getElementById('fin-price').value);
+  const qtyPer10a = parseNum(document.getElementById('fin-qty').value) || d.quantity;
+  const qty = qtyPer10a * scale;
+  document.getElementById('fin-total-qty').value = toInputFmt(qty);
+  const revenue = qty * price;
+  const expense = d.totalExpense * scale;
+  const netIncome = revenue - expense;
+
+  document.getElementById('fin-revenue').value = toInputFmt(revenue);
+  document.getElementById('fin-expense').value = toInputFmt(expense);
+  document.getElementById('fin-netincome').value = toInputFmt(netIncome);
+
+  const invest = parseNum(document.getElementById('fin-invest').value);
+  const usefulLife = parseNum(document.getElementById('fin-useful-life').value) || 15;
+  const annualDepr = invest / usefulLife;
+  document.getElementById('fin-depr').value = toInputFmt(annualDepr);
+
+  const livingMonth = parseNum(document.getElementById('fin-living-month').value);
+  const livingYear = livingMonth * 12;
+  document.getElementById('fin-living-year').value = toInputFmt(livingYear);
+
+  // Calculate loan schedules
+  const maxYears = Math.max(1, ...finLoans.map(l => l.totalYears));
+  const yearlyData = [];
+
+  for (let y = 1; y <= maxYears; y++) {
+    let totalPrincipal = 0, totalInterest = 0;
+    for (const loan of finLoans) {
+      const { amount, rate, totalYears, graceYears, method } = loan;
+      const r = rate / 100;
+      if (y > totalYears) continue;
+
+      if (y <= graceYears) {
+        // Grace period: interest only
+        totalInterest += amount * r;
+      } else {
+        const repayYears = totalYears - graceYears;
+        const yearInRepay = y - graceYears;
+        if (method === 'equal_principal') {
+          // 원금균등분할
+          const annualPrincipal = amount / repayYears;
+          const remainingPrincipal = amount - annualPrincipal * (yearInRepay - 1);
+          totalPrincipal += annualPrincipal;
+          totalInterest += remainingPrincipal * r;
+        } else {
+          // 원리금균등 (annuity)
+          const annuity = amount * (r * Math.pow(1+r, repayYears)) / (Math.pow(1+r, repayYears) - 1);
+          const remainAfterPrev = amount * Math.pow(1+r, yearInRepay-1) - annuity * (Math.pow(1+r, yearInRepay-1) - 1) / r;
+          const interestPart = remainAfterPrev * r;
+          const principalPart = annuity - interestPart;
+          totalPrincipal += principalPart;
+          totalInterest += interestPart;
+        }
+      }
+    }
+    const totalRepay = totalPrincipal + totalInterest;
+    const available = netIncome - livingYear - totalRepay;
+    yearlyData.push({ year: y, principal: totalPrincipal, interest: totalInterest, repay: totalRepay, available });
+  }
+
+  // Total annual loan repayment (year 1)
+  const y1 = yearlyData[0] || { repay: 0, available: 0 };
+  const totalAnnualRepay = y1.repay;
+  const availableIncome = netIncome - livingYear - totalAnnualRepay;
+
+  // Result panel
+  const isDeficit = availableIncome < 0;
+  document.getElementById('fin-result-panel').innerHTML = `
+    <h3>연간 수지분석 결과 (1년차 기준)</h3>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="r-label">순수익 (판매액-경영비)</div>
+        <div class="r-value">${fmtW(netIncome)}</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">연간 생활비</div>
+        <div class="r-value" style="color:#F39C12">${fmtW(livingYear)}</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">연간 융자상환액</div>
+        <div class="r-value" style="color:#E74C3C">${fmtW(totalAnnualRepay)}</div>
+        <div class="r-change">(원금 ${fmtW(y1.principal)} + 이자 ${fmtW(y1.interest)})</div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">가용소득 (잔여)</div>
+        <div class="r-value" style="color:${isDeficit ? '#E74C3C' : '#2ECC71'}">${fmtW(availableIncome)}</div>
+        <div class="r-change">${isDeficit ? '적자 - 생활비/상환 조정 필요' : '흑자'}</div>
+      </div>
+    </div>
+  `;
+
+  // Cashflow bar
+  const totalOut = livingYear + totalAnnualRepay + Math.max(0, availableIncome);
+  const barBase = Math.max(netIncome, totalOut);
+  if (barBase > 0) {
+    const livingPct = (livingYear / barBase * 100).toFixed(1);
+    const repayPct = (totalAnnualRepay / barBase * 100).toFixed(1);
+    const availPct = Math.max(0, availableIncome / barBase * 100).toFixed(1);
+    document.getElementById('fin-cashflow-bar-wrap').innerHTML = `
+      <p style="font-size:0.85rem;margin-bottom:4px;font-weight:600">순수익 배분 구조</p>
+      <div class="cashflow-bar">
+        <div style="width:${livingPct}%;background:#F39C12">생활비</div>
+        <div style="width:${repayPct}%;background:#E74C3C">융자상환</div>
+        <div style="width:${availPct}%;background:#2ECC71">${availableIncome > 0 ? '잔여' : ''}</div>
+      </div>
+    `;
+  }
+
+  // Summary table
+  document.getElementById('fin-summary-table').innerHTML = `
+    <thead><tr><th style="text-align:left">항목</th><th>금액</th><th>비중</th></tr></thead>
+    <tbody>
+      <tr><td>연간 판매액</td><td>${fmtW(revenue)}</td><td>-</td></tr>
+      <tr><td>(-) 경영비</td><td>${fmtW(expense)}</td><td>${(expense/revenue*100).toFixed(1)}%</td></tr>
+      <tr class="total-row"><td>= 순수익</td><td>${fmtW(netIncome)}</td><td>${(netIncome/revenue*100).toFixed(1)}%</td></tr>
+      <tr><td>(-) 연간 생활비</td><td>${fmtW(livingYear)}</td><td>${netIncome>0?(livingYear/netIncome*100).toFixed(1)+'%':'-'}</td></tr>
+      <tr><td>(-) 융자 원금상환</td><td>${fmtW(y1.principal)}</td><td>${netIncome>0?(y1.principal/netIncome*100).toFixed(1)+'%':'-'}</td></tr>
+      <tr><td>(-) 융자 이자</td><td>${fmtW(y1.interest)}</td><td>${netIncome>0?(y1.interest/netIncome*100).toFixed(1)+'%':'-'}</td></tr>
+      <tr class="${isDeficit ? 'deficit-row' : 'net-row'}"><td>= 가용소득</td><td>${fmtW(availableIncome)}</td><td>${netIncome>0?(availableIncome/netIncome*100).toFixed(1)+'%':'-'}</td></tr>
+    </tbody>
+  `;
+
+  // Schedule table
+  let schedHtml = '<thead><tr><th>연차</th><th>원금상환</th><th>이자</th><th>상환합계</th><th>생활비</th><th>가용소득</th></tr></thead><tbody>';
+  for (const yd of yearlyData) {
+    const cls = yd.available < 0 ? ' style="color:#E74C3C"' : '';
+    schedHtml += `<tr>
+      <td>${yd.year}년</td><td>${fmtW(yd.principal)}</td><td>${fmtW(yd.interest)}</td>
+      <td>${fmtW(yd.repay)}</td><td>${fmtW(livingYear)}</td>
+      <td${cls}>${fmtW(yd.available)}</td>
+    </tr>`;
+  }
+  // After all loans are repaid
+  schedHtml += `<tr style="font-weight:700;background:#E8F8F5">
+    <td>상환 완료 후</td><td>0원</td><td>0원</td><td>0원</td><td>${fmtW(livingYear)}</td>
+    <td style="color:#27AE60">${fmtW(netIncome - livingYear)}</td>
+  </tr>`;
+  schedHtml += '</tbody>';
+  document.getElementById('fin-schedule-table').innerHTML = schedHtml;
+
+  // Chart
+  if (!hasChart) return;
+  destroyChart('finChart');
+  const labels = yearlyData.map(y => y.year + '년');
+  labels.push('상환완료 후');
+  const availData = yearlyData.map(y => y.available);
+  availData.push(netIncome - livingYear);
+
+  charts.finChart = new Chart(document.getElementById('finChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '가용소득',
+          data: availData,
+          backgroundColor: availData.map(v => v >= 0 ? '#2ECC71' : '#E74C3C'),
+          borderRadius: 4
+        },
+        {
+          label: '융자상환액',
+          data: [...yearlyData.map(y => y.repay), 0],
+          backgroundColor: 'rgba(231,76,60,0.3)',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtW(ctx.raw) } }
+      },
+      scales: {
+        y: { ticks: { callback: v => (v/10000).toFixed(0) + '만' } }
+      }
+    }
+  });
+}
+
+function buildLoanCards() {
+  const container = document.getElementById('fin-loans');
+  container.innerHTML = finLoans.map((loan, i) => `
+    <div class="loan-card">
+      <h4>
+        <span>융자 ${i+1}</span>
+        ${finLoans.length > 1 ? `<button class="loan-remove" onclick="removeLoan(${i})">&times;</button>` : ''}
+      </h4>
+      <div class="loan-grid">
+        <div class="fin-input-group">
+          <label>융자명</label>
+          <input type="text" class="fin-input" value="${loan.name}" data-loan="${i}" data-field="name" style="text-align:left;max-width:100%">
+        </div>
+        <div class="fin-input-group">
+          <label>융자금액 (천원)</label>
+          <input type="text" class="fin-input" value="${toInputFmt(loan.amount / 1000)}" data-loan="${i}" data-field="amount">
+        </div>
+        <div class="fin-input-group">
+          <label>이자율 (%)</label>
+          <input type="text" class="fin-input" value="${loan.rate}" data-loan="${i}" data-field="rate" style="max-width:100%">
+        </div>
+        <div class="fin-input-group">
+          <label>상환방식</label>
+          <select class="fin-select" data-loan="${i}" data-field="method" style="max-width:100%">
+            <option value="equal_principal" ${loan.method==='equal_principal'?'selected':''}>원금균등분할</option>
+            <option value="annuity" ${loan.method==='annuity'?'selected':''}>원리금균등</option>
+          </select>
+        </div>
+        <div class="fin-input-group">
+          <label>융자기간 (년)</label>
+          <input type="text" class="fin-input" value="${loan.totalYears}" data-loan="${i}" data-field="totalYears" style="max-width:100%">
+        </div>
+        <div class="fin-input-group">
+          <label>거치기간 (년)</label>
+          <input type="text" class="fin-input" value="${loan.graceYears}" data-loan="${i}" data-field="graceYears" style="max-width:100%">
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Event delegation for loan inputs
+  container.querySelectorAll('[data-loan]').forEach(el => {
+    el.addEventListener('change', () => {
+      const i = parseInt(el.dataset.loan);
+      const f = el.dataset.field;
+      if (f === 'name') finLoans[i].name = el.value;
+      else if (f === 'method') finLoans[i].method = el.value;
+      else if (f === 'rate') finLoans[i].rate = parseFloat(el.value) || 0;
+      else if (f === 'amount') finLoans[i].amount = parseNum(el.value) * 1000;
+      else finLoans[i][f] = parseInt(el.value) || 0;
+      calcFinance();
+    });
+    if (el.tagName !== 'SELECT') {
+      el.addEventListener('input', () => {
+        const i = parseInt(el.dataset.loan);
+        const f = el.dataset.field;
+        if (f === 'name') finLoans[i].name = el.value;
+        else if (f === 'rate') finLoans[i].rate = parseFloat(el.value) || 0;
+        else if (f === 'amount') finLoans[i].amount = parseNum(el.value) * 1000;
+        else finLoans[i][f] = parseInt(el.value) || 0;
+      });
+    }
+  });
+}
+
+document.getElementById('fin-add-loan').addEventListener('click', () => {
+  if (finLoans.length >= 5) { alert('최대 5개까지 추가 가능합니다.'); return; }
+  finLoans.push({ name: `융자 ${finLoans.length+1}`, amount: 50000000, rate: 2.5, totalYears: 5, graceYears: 1, method: 'equal_principal' });
+  buildLoanCards();
+  calcFinance();
+});
+
+window.removeLoan = function(idx) {
+  finLoans.splice(idx, 1);
+  buildLoanCards();
+  calcFinance();
+};
+
+function renderFinance() {
+  const m = document.getElementById('fin-method').value;
+  const d = DATA[m];
+  if (!document.getElementById('fin-price').value) {
+    document.getElementById('fin-price').value = toInputFmt(d.unitPrice);
+  }
+  if (!document.getElementById('fin-qty').value) {
+    document.getElementById('fin-qty').value = toInputFmt(d.quantity);
+  }
+  buildLoanCards();
+  calcFinance();
+}
+
+// Finance input events
+['fin-area','fin-price','fin-qty','fin-invest','fin-useful-life','fin-living-month'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('change', () => {
+    if (id === 'fin-price' || id === 'fin-qty') el.dataset.userSet = '1';
+    calcFinance();
+  });
+  el.addEventListener('keyup', e => {
+    if (e.key === 'Enter') calcFinance();
+  });
+});
+
+document.getElementById('fin-method').addEventListener('change', () => {
+  const m = document.getElementById('fin-method').value;
+  const d = DATA[m];
+  if (!document.getElementById('fin-price').dataset.userSet) {
+    document.getElementById('fin-price').value = toInputFmt(d.unitPrice);
+  }
+  if (!document.getElementById('fin-qty').dataset.userSet) {
+    document.getElementById('fin-qty').value = toInputFmt(d.quantity);
+  }
+  calcFinance();
+});
+
+// ============================================================
+// TAB SWITCHING & METHOD TOGGLE
+// ============================================================
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
+  renderCurrentTab(tabId);
+}
+
+function renderCurrentTab(tabId) {
+  if (tabId === 'dashboard') renderDashboard();
+  else if (tabId === 'cost-sim') { buildCostSliders(); updateCostSim(); }
+  else if (tabId === 'price-sim') { buildPriceSliders(); updatePriceSim(); }
+  else if (tabId === 'labor') renderLabor();
+  else if (tabId === 'scale') renderScale();
+  else if (tabId === 'finance') renderFinance();
+  else if (tabId === 'scenario') renderScenarios();
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function updateAllMethodBtns() {
+  document.querySelectorAll('.method-toggle').forEach(toggle => {
+    toggle.querySelectorAll('.method-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.method === currentMethod);
+    });
+  });
+}
+
+document.querySelectorAll('.method-toggle').forEach(toggle => {
+  toggle.querySelectorAll('.method-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentMethod = btn.dataset.method;
+      updateAllMethodBtns();
+      const activeTab = document.querySelector('.tab-content.active').id;
+      renderCurrentTab(activeTab);
+    });
+  });
+});
+
+// Reset buttons
+document.getElementById('cost-reset').addEventListener('click', () => {
+  costMultipliers[currentMethod] = {};
+  buildCostSliders();
+  updateCostSim();
+});
+
+document.getElementById('price-reset').addEventListener('click', () => {
+  priceOverrides[currentMethod] = { price: null, qty: null };
+  buildPriceSliders();
+  updatePriceSim();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+renderDashboard();
+</script>
+</body>
+</html>
