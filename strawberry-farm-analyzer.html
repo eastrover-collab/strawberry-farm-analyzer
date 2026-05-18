@@ -394,6 +394,70 @@ footer {
   width: 100%;
   max-width: 100%;
 }
+.assumption-card {
+  margin-top: 16px;
+  border-left: 4px solid var(--primary);
+}
+.assumption-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+.assumption-field {
+  min-width: 0;
+}
+.assumption-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+}
+.assumption-field input,
+.assumption-field select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.assumption-field input {
+  text-align: right;
+}
+.assumption-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.metric-note {
+  margin-top: 12px;
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+.citation-box {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+.preset-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
 </style>
 </head>
 <body>
@@ -406,6 +470,47 @@ footer {
 </header>
 
 <div class="container">
+  <div class="card assumption-card">
+    <h3>분석 조건</h3>
+    <div class="assumption-grid">
+      <div class="assumption-field">
+        <label for="global-crop">작물</label>
+        <select class="global-input" id="global-crop">
+          <option value="strawberry">딸기</option>
+        </select>
+      </div>
+      <div class="assumption-field">
+        <label for="global-method">재배방식</label>
+        <select class="global-input" id="global-method">
+          <option value="soil">토경재배</option>
+          <option value="hydro">수경재배</option>
+        </select>
+      </div>
+      <div class="assumption-field">
+        <label for="global-area">농장 규모 (평)</label>
+        <input type="text" class="global-input" id="global-area" value="1,000">
+      </div>
+      <div class="assumption-field">
+        <label for="global-price">판매단가 (원/kg)</label>
+        <input type="text" class="global-input" id="global-price" value="">
+      </div>
+      <div class="assumption-field">
+        <label for="global-qty">10a당 생산량 (kg)</label>
+        <input type="text" class="global-input" id="global-qty" value="">
+      </div>
+      <div class="assumption-field">
+        <label for="global-productivity">생산성 변화 (%)</label>
+        <input type="text" class="global-input" id="global-productivity" value="0">
+      </div>
+    </div>
+    <div class="assumption-actions">
+      <button class="btn btn-primary" id="global-apply">조건 적용</button>
+      <button class="btn btn-outline" id="global-reset">평균값으로 복원</button>
+      <button class="btn btn-outline" id="global-copy-summary">요약 복사</button>
+    </div>
+    <p class="metric-note" id="global-summary-note"></p>
+  </div>
+
   <div class="tabs">
     <button class="tab-btn active" data-tab="dashboard">경영현황</button>
     <button class="tab-btn" data-tab="cost-sim">비용 시뮬레이션</button>
@@ -429,7 +534,10 @@ footer {
         <div class="chart-container"><canvas id="costDonutChart"></canvas></div>
       </div>
       <div class="card">
-        <h3>수입 vs 비용 vs 소득</h3>
+        <h3>수입 vs 경영비 vs 영농소득</h3>
+        <p style="margin-bottom:12px;font-size:0.85rem;color:var(--text-light)">
+          영농소득은 생활비와 융자 원리금 상환액을 차감하기 전 금액입니다.
+        </p>
         <div class="chart-container"><canvas id="incomeBarChart"></canvas></div>
       </div>
     </div>
@@ -794,15 +902,82 @@ const DATA = {
 let currentMethod = 'soil';
 const costMultipliers = { soil: {}, hydro: {} };
 const priceOverrides = { soil: { price: null, qty: null }, hydro: { price: null, qty: null } };
+const analysisState = { areaPyeong: 1000, productivityPct: 0, userSetPrice: false, userSetQty: false };
 
 function getBase() { return DATA[currentMethod]; }
+function getAreaScale(area = analysisState.areaPyeong) { return area * SCALE / 1000; }
+function getActivePrice() { return priceOverrides[currentMethod].price ?? getBase().unitPrice; }
+function getActiveQty() { return priceOverrides[currentMethod].qty ?? getBase().quantity; }
+function getInputNumber(id) { return parseNum(document.getElementById(id).value); }
+function setInputNumber(id, value) { document.getElementById(id).value = toInputFmt(value); }
+function setMethod(method) {
+  currentMethod = method;
+  document.getElementById('global-method').value = method;
+  const finMethod = document.getElementById('fin-method');
+  if (finMethod) finMethod.value = method;
+  updateAllMethodBtns();
+}
+function syncFinanceInputsFromState() {
+  const finArea = document.getElementById('fin-area');
+  if (!finArea) return;
+  document.getElementById('fin-method').value = currentMethod;
+  setInputNumber('fin-area', analysisState.areaPyeong);
+  setInputNumber('fin-price', getActivePrice());
+  setInputNumber('fin-qty', getActiveQty());
+}
+function updateGlobalInputsFromState() {
+  const d = getBase();
+  document.getElementById('global-method').value = currentMethod;
+  setInputNumber('global-area', analysisState.areaPyeong);
+  setInputNumber('global-price', getActivePrice() || d.unitPrice);
+  setInputNumber('global-qty', getActiveQty() || d.quantity);
+  document.getElementById('global-productivity').value = analysisState.productivityPct;
+  syncFinanceInputsFromState();
+  updateGlobalSummary();
+}
+function readGlobalInputs() {
+  currentMethod = document.getElementById('global-method').value;
+  analysisState.areaPyeong = getInputNumber('global-area') || 1000;
+  analysisState.productivityPct = parseFloat(document.getElementById('global-productivity').value) || 0;
+  priceOverrides[currentMethod].price = getInputNumber('global-price') || getBase().unitPrice;
+  priceOverrides[currentMethod].qty = getInputNumber('global-qty') || getBase().quantity;
+  analysisState.userSetPrice = true;
+  analysisState.userSetQty = true;
+  syncFinanceInputsFromState();
+  updateAllMethodBtns();
+  renderCurrentTab(document.querySelector('.tab-content.active').id);
+  updateGlobalSummary();
+}
+function resetGlobalDefaults() {
+  const d = getBase();
+  analysisState.areaPyeong = 1000;
+  analysisState.productivityPct = 0;
+  analysisState.userSetPrice = false;
+  analysisState.userSetQty = false;
+  priceOverrides[currentMethod] = { price: null, qty: null };
+  setInputNumber('global-area', analysisState.areaPyeong);
+  setInputNumber('global-price', d.unitPrice);
+  setInputNumber('global-qty', d.quantity);
+  document.getElementById('global-productivity').value = 0;
+  syncFinanceInputsFromState();
+  renderCurrentTab(document.querySelector('.tab-content.active').id);
+  updateGlobalSummary();
+}
+function updateGlobalSummary() {
+  const sim = simulate(currentMethod, costMultipliers[currentMethod], { price: getActivePrice(), qty: getActiveQty() });
+  const productionCost = sim.totalExpense + getBase().familyLabor * getAreaScale();
+  document.getElementById('global-summary-note').textContent =
+    `딸기 ${getBase().name}, ${fmt(analysisState.areaPyeong)}평 기준: 연매출 ${fmtW(sim.totalIncome)}, 경영비 ${fmtW(sim.totalExpense)}, 생산비 총액(자가노동비 포함) ${fmtW(productionCost)}, 영농 순수익 ${fmtW(sim.income)}, 소득률 ${sim.incomeRate.toFixed(1)}%`;
+}
 
 // ============================================================
 // SIMULATION
 // ============================================================
-function simulate(method, costMult, priceOvr) {
+function simulate(method, costMult, priceOvr, options = {}) {
   const d = DATA[method];
-  const qty = (priceOvr.qty ?? d.quantity) * SCALE;
+  const scale = options.scale ?? getAreaScale();
+  const productivityPct = options.productivityPct ?? analysisState.productivityPct;
+  const qty = (priceOvr.qty ?? d.quantity) * (1 + productivityPct / 100) * scale;
   const price = priceOvr.price ?? d.unitPrice;
   const totalIncome = qty * price;
 
@@ -810,15 +985,15 @@ function simulate(method, costMult, priceOvr) {
   const adjustedCosts = {};
   for (const [k, v] of Object.entries(d.costs)) {
     const m = costMult[k] ?? 1;
-    const adj = v.value * SCALE * m;
+    const adj = v.value * scale * m;
     adjustedCosts[k] = adj;
     costTotal += adj;
   }
 
-  const rental = (d.equipRental + d.landRental) * SCALE;
-  const outsourcing = d.outsourcing * SCALE;
+  const rental = (d.equipRental + d.landRental) * scale;
+  const outsourcing = d.outsourcing * scale;
   const hiredMult = costMult.hiredLabor ?? 1;
-  const hiredLabor = d.hiredLabor * SCALE * hiredMult;
+  const hiredLabor = d.hiredLabor * scale * hiredMult;
   const totalExpense = costTotal + rental + outsourcing + hiredLabor;
   const income = totalIncome - totalExpense;
   const incomeRate = totalIncome > 0 ? (income / totalIncome * 100) : 0;
@@ -857,9 +1032,9 @@ function renderDashboard() {
       <div class="sub">10a당 ${fmtW(d.totalExpense)}</div>
     </div>
     <div class="summary-card green">
-      <div class="label">소득</div>
+      <div class="label">영농소득</div>
       <div class="value">${fmtW(d.income * s)}</div>
-      <div class="sub">소득률 ${d.incomeRate}%</div>
+      <div class="sub">융자상환 전 · 소득률 ${d.incomeRate}%</div>
     </div>
     <div class="summary-card blue">
       <div class="label">총 노동시간</div>
@@ -921,7 +1096,7 @@ function renderDashboard() {
   charts.incomeBar = new Chart(document.getElementById('incomeBarChart'), {
     type: 'bar',
     data: {
-      labels: ['총수입', '경영비', '소득'],
+      labels: ['총수입', '경영비', '영농소득(상환 전)'],
       datasets: [{
         data: [d.totalIncome * s, d.totalExpense * s, d.income * s],
         backgroundColor: ['#3498DB', '#E74C3C', '#2ECC71'],
@@ -984,6 +1159,7 @@ function buildCostSliders() {
       const key = e.target.dataset.key;
       costMultipliers[currentMethod][key] = parseInt(e.target.value) / 100;
       updateCostSim();
+      updateGlobalSummary();
     });
   });
 }
@@ -1037,6 +1213,7 @@ function updateCostSim() {
       </div>
     </div>
   `;
+  updateGlobalSummary();
 
   // Compare chart
   if (!hasChart) return;
@@ -1081,12 +1258,14 @@ function buildPriceSliders() {
   const ovr = priceOverrides[currentMethod];
   const price = ovr.price ?? d.unitPrice;
   const qty = ovr.qty ?? d.quantity;
+  const priceChange = pct(price, d.unitPrice);
+  const qtyChange = pct(qty, d.quantity);
 
   document.getElementById('price-sliders').innerHTML = `
     <div class="slider-group">
       <div class="slider-label">
         <span class="name">판매단가 (원/kg)</span>
-        <span class="val" id="price-val">${fmt(price)}원</span>
+        <span class="val" id="price-val">${fmt(price)}원 (${priceChange > 0 ? '+' : ''}${priceChange}%)</span>
       </div>
       <div class="slider-row">
         <input type="range" min="3000" max="18000" step="100" value="${price}" id="price-slider">
@@ -1095,7 +1274,7 @@ function buildPriceSliders() {
     <div class="slider-group">
       <div class="slider-label">
         <span class="name">10a당 생산량 (kg)</span>
-        <span class="val" id="qty-val">${fmt(qty)}kg (1000평: ${fmt(qty * SCALE)}kg)</span>
+        <span class="val" id="qty-val">${fmt(qty)}kg (${qtyChange > 0 ? '+' : ''}${qtyChange}%) · 1000평: ${fmt(qty * SCALE)}kg</span>
       </div>
       <div class="slider-row">
         <input type="range" min="1000" max="5000" step="50" value="${qty}" id="qty-slider">
@@ -1122,7 +1301,13 @@ function updatePriceSim() {
   const base = simulate(currentMethod, costMultipliers[currentMethod], { price: null, qty: null });
 
   document.getElementById('price-val').textContent = fmt(price) + '원';
-  document.getElementById('qty-val').textContent = `${fmt(qty)}kg (1000평: ${fmt(qty * SCALE)}kg)`;
+  const priceChange = pct(price, d.unitPrice);
+  const qtyChange = pct(qty, d.quantity);
+  document.getElementById('price-val').textContent = `${fmt(price)}원 (${priceChange > 0 ? '+' : ''}${priceChange}%)`;
+  document.getElementById('qty-val').textContent = `${fmt(qty)}kg (${qtyChange > 0 ? '+' : ''}${qtyChange}%) · 1000평: ${fmt(qty * SCALE)}kg`;
+  setInputNumber('global-price', price);
+  setInputNumber('global-qty', qty);
+  syncFinanceInputsFromState();
 
   const incChange = pct(sim.income, base.income);
   document.getElementById('price-result').innerHTML = `
@@ -1150,6 +1335,7 @@ function updatePriceSim() {
       <span class="bep-info">손익분기 단가: ${fmt(Math.round(sim.bep))}원/kg</span>
     </div>
   `;
+  updateGlobalSummary();
 
   if (!hasChart) return;
   destroyChart('priceLine');
@@ -1707,6 +1893,7 @@ window.removeLoan = function(idx) {
 };
 
 function renderFinance() {
+  syncFinanceInputsFromState();
   const m = document.getElementById('fin-method').value;
   const d = DATA[m];
   if (!document.getElementById('fin-price').value) {
@@ -1723,8 +1910,22 @@ function renderFinance() {
 ['fin-area','fin-price','fin-qty','fin-invest','fin-useful-life','fin-living-month'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('change', () => {
-    if (id === 'fin-price' || id === 'fin-qty') el.dataset.userSet = '1';
+    if (id === 'fin-area') {
+      analysisState.areaPyeong = parseNum(el.value) || 1000;
+      setInputNumber('global-area', analysisState.areaPyeong);
+    }
+    if (id === 'fin-price') {
+      el.dataset.userSet = '1';
+      priceOverrides[currentMethod].price = parseNum(el.value) || getBase().unitPrice;
+      setInputNumber('global-price', priceOverrides[currentMethod].price);
+    }
+    if (id === 'fin-qty') {
+      el.dataset.userSet = '1';
+      priceOverrides[currentMethod].qty = parseNum(el.value) || getBase().quantity;
+      setInputNumber('global-qty', priceOverrides[currentMethod].qty);
+    }
     calcFinance();
+    updateGlobalSummary();
   });
   el.addEventListener('keyup', e => {
     if (e.key === 'Enter') calcFinance();
@@ -1732,7 +1933,8 @@ function renderFinance() {
 });
 
 document.getElementById('fin-method').addEventListener('change', () => {
-  const m = document.getElementById('fin-method').value;
+  setMethod(document.getElementById('fin-method').value);
+  const m = currentMethod;
   const d = DATA[m];
   if (!document.getElementById('fin-price').dataset.userSet) {
     document.getElementById('fin-price').value = toInputFmt(d.unitPrice);
@@ -1777,11 +1979,27 @@ function updateAllMethodBtns() {
 document.querySelectorAll('.method-toggle').forEach(toggle => {
   toggle.querySelectorAll('.method-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      currentMethod = btn.dataset.method;
-      updateAllMethodBtns();
+      setMethod(btn.dataset.method);
       const activeTab = document.querySelector('.tab-content.active').id;
       renderCurrentTab(activeTab);
+      updateGlobalInputsFromState();
     });
+  });
+});
+
+document.getElementById('global-method').addEventListener('change', e => {
+  setMethod(e.target.value);
+  renderCurrentTab(document.querySelector('.tab-content.active').id);
+  updateGlobalInputsFromState();
+});
+document.getElementById('global-apply').addEventListener('click', readGlobalInputs);
+document.getElementById('global-reset').addEventListener('click', resetGlobalDefaults);
+document.getElementById('global-copy-summary').addEventListener('click', () => {
+  navigator.clipboard?.writeText(document.getElementById('global-summary-note').textContent);
+});
+['global-area','global-price','global-qty','global-productivity'].forEach(id => {
+  document.getElementById(id).addEventListener('keyup', e => {
+    if (e.key === 'Enter') readGlobalInputs();
   });
 });
 
@@ -1801,6 +2019,7 @@ document.getElementById('price-reset').addEventListener('click', () => {
 // ============================================================
 // INIT
 // ============================================================
+updateGlobalInputsFromState();
 renderDashboard();
 </script>
 </body>
